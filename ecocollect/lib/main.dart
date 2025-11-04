@@ -1,27 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'firebase_options.dart'; // 👈 Make sure this file exists in lib/
-import 'screens/waste_report_screen.dart'; // 👈 Your waste report screen
+import 'firebase_options.dart';
+import 'screens/waste_report_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions
-        .currentPlatform, // ✅ Uses your firebase_options.dart
-  );
-  runApp(const MyApp());
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(const EcoCollectApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class EcoCollectApp extends StatelessWidget {
+  const EcoCollectApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'EcoCollect',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.green, useMaterial3: true),
+      theme: ThemeData(primarySwatch: Colors.green),
       home: const AuthGate(),
     );
   }
@@ -35,25 +32,26 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // 🕓 Waiting for Firebase
+        // Loading indicator while Firebase checks the user state
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // 🔐 Not logged in — show auth screen
+        // If no user is signed in → show login/signup page
         if (!snapshot.hasData) {
           return const AuthScreen();
         }
 
-        // ✅ Logged in — show main app
+        // If user is signed in → go to waste reporting screen
         return WasteReportScreen(userId: snapshot.data!.uid);
       },
     );
   }
 }
 
+/// Basic login/signup page (minimal)
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
 
@@ -64,19 +62,20 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool isLogin = true;
-  bool _isLoading = false;
+  bool _isLogin = true;
+  bool _loading = false;
 
   Future<void> _authenticate() async {
-    setState(() => _isLoading = true);
+    setState(() => _loading = true);
     try {
-      if (isLogin) {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final auth = FirebaseAuth.instance;
+      if (_isLogin) {
+        await auth.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
       } else {
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        await auth.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
@@ -86,76 +85,50 @@ class _AuthScreenState extends State<AuthScreen> {
         SnackBar(content: Text(e.message ?? 'Authentication failed')),
       );
     } finally {
-      setState(() => _isLoading = false);
+      setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green.shade50,
-      body: Center(
-        child: Card(
-          elevation: 6,
-          margin: const EdgeInsets.all(24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: SizedBox(
-              width: 350,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    isLogin ? 'Login' : 'Register',
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(labelText: 'Password'),
-                  ),
-                  const SizedBox(height: 20),
-                  _isLoading
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                          onPressed: _authenticate,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade600,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 12,
-                            ),
-                          ),
-                          child: Text(isLogin ? 'Login' : 'Register'),
-                        ),
-                  TextButton(
-                    onPressed: () {
-                      setState(() => isLogin = !isLogin);
-                    },
-                    child: Text(
-                      isLogin
-                          ? 'Create new account'
-                          : 'Already have an account? Login',
-                    ),
-                  ),
-                ],
+      appBar: AppBar(title: Text(_isLogin ? 'Login' : 'Sign Up')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Password'),
+            ),
+            const SizedBox(height: 16),
+            if (_loading)
+              const CircularProgressIndicator()
+            else
+              ElevatedButton(
+                onPressed: _authenticate,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(_isLogin ? 'Login' : 'Sign Up'),
+              ),
+            TextButton(
+              onPressed: () => setState(() => _isLogin = !_isLogin),
+              child: Text(
+                _isLogin
+                    ? "Don't have an account? Sign Up"
+                    : "Already have an account? Login",
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
