@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "336816040437",
+    "project_id": "ecocollect-app",
+    "storage_bucket": "ecocollect-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:336816040437:android:1af644477345fe966ad8bc",
+        "android_client_info": {
+          "package_name": "com.example.ecocollect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkc3bji-99DU09Baki6W1Jc4LVengK7TI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
