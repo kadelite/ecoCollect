@@ -13,18 +13,20 @@ const String __firebase_config =
     '{"apiKey": "MOCK_KEY", "projectId": "MOCK_PROJECT"}';
 const String __initial_auth_token = '';
 
-// MOCK User class to simulate a Firebase User object
+// MOCK User class to simulate a Firebase User object (Updated to include username)
 class MockUser {
   final String uid;
   final String email;
-  MockUser(this.uid, this.email);
+  final String? username; // Added username
+
+  MockUser(this.uid, this.email, {this.username});
 }
 
 // MOCK Firestore for demonstration
 class MockFirestore {
   final Map<String, dynamic> db = {};
-  final Map<String, String> _userProfiles =
-      {}; // Mock user profile storage (username/phone)
+  // Mock user profile storage (key: uid, value: {username, phone})
+  final Map<String, Map<String, String>> _userProfiles = {};
 
   String getPrivatePath(String userId, String collection) {
     return '/artifacts/$_appId/users/$userId/$collection';
@@ -41,8 +43,12 @@ class MockFirestore {
     String username,
     String phone,
   ) async {
-    _userProfiles[uid] = 'Username: $username, Phone: $phone';
+    _userProfiles[uid] = {'username': username, 'phone': phone};
     print('Firestore: User profile saved for $uid: $_userProfiles');
+  }
+
+  Map<String, String>? getUserProfile(String uid) {
+    return _userProfiles[uid];
   }
 }
 
@@ -54,7 +60,8 @@ final MockFirestore _db = MockFirestore();
 // MOCK AUTHENTICATION LOGIC (Simulates Firebase Auth)
 class MockAuth {
   MockUser? _currentUser;
-  final Map<String, dynamic> _userDatabase = {}; // Mock {email: password} store
+  final Map<String, dynamic> _userDatabase =
+      {}; // Mock {email: password, uid, username, phone} store
 
   MockUser? get currentUser => _currentUser;
 
@@ -74,7 +81,7 @@ class MockAuth {
       'username': username,
       'phone': phone,
     };
-    _currentUser = MockUser(uid, email);
+    _currentUser = MockUser(uid, email, username: username);
     await _db.saveUserProfile(uid, username, phone);
     print('Auth: User REGISTERED: $email');
     return _currentUser;
@@ -86,7 +93,12 @@ class MockAuth {
   ) async {
     final userData = _userDatabase[email];
     if (userData != null && userData['password'] == password) {
-      _currentUser = MockUser(userData['uid'] as String, email);
+      final username = userData['username'] as String?;
+      _currentUser = MockUser(
+        userData['uid'] as String,
+        email,
+        username: username,
+      );
       print('Auth: User LOGGED IN: $email');
       return _currentUser;
     }
@@ -114,6 +126,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'EcoCollect: Waste & Recycling',
+      // 1. REMOVE DEBUG BANNER
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green.shade700),
         useMaterial3: true,
@@ -364,7 +378,7 @@ class _AuthScreenState extends State<AuthScreen> {
 }
 
 // ----------------------------------------------------
-// --- Logged-In Main Content ---
+// --- Logged-In Main Content (UPDATED) ---
 // ----------------------------------------------------
 
 class HomeScreenContent extends StatefulWidget {
@@ -401,6 +415,12 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
     });
   }
 
+  // Helper to get the username safely
+  String get _username {
+    // Falls back to a generic greeting if username is somehow null
+    return widget.currentUser.username ?? 'User';
+  }
+
   // Define the screens
   late final List<Widget> _widgetOptions = <Widget>[
     WasteReportScreen(userId: widget.currentUser.uid, onReport: _addReport),
@@ -418,13 +438,17 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
       appBar: AppBar(
         title: const Text('EcoCollect'),
         actions: [
-          // Display user email and Logout Button
+          // 2. WELCOME USERNAME MESSAGE
           Center(
             child: Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: Text(
-                'Logged in as: ${widget.currentUser.email}',
-                style: const TextStyle(fontSize: 12, color: Colors.white70),
+                'Welcome, $_username', // Display "Welcome, Username"
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                  fontWeight: FontWeight.bold,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -461,7 +485,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
 }
 
 // ----------------------------------------------------
-// --- Tab 1: Waste Reporting Screen (UPDATED) ---
+// --- Tab 1: Waste Reporting Screen ---
 // ----------------------------------------------------
 
 class WasteReportScreen extends StatefulWidget {
@@ -628,7 +652,7 @@ class _WasteReportScreenState extends State<WasteReportScreen> {
           ),
           const SizedBox(height: 20),
 
-          // --- Photo Status and Button (UPDATED) ---
+          // --- Photo Status and Button ---
           Container(
             height: 150,
             decoration: BoxDecoration(
