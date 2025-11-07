@@ -1,17 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'waste_report_screen.dart';
+import 'track_trucks_screen.dart';
+import 'rewards_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final String userId;
   const HomeScreen({super.key, required this.userId});
 
   @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('EcoCollect Dashboard'),
+        title: const Text('EcoCollect'),
         backgroundColor: Colors.green,
         actions: [
           IconButton(
@@ -22,12 +42,25 @@ class HomeScreen extends StatelessWidget {
             tooltip: 'Logout',
           ),
         ],
-      ),
-      body: Center(
-        child: Text(
-          'Welcome, ${user?.email ?? "User"}!',
-          style: const TextStyle(fontSize: 22),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          tabs: const [
+            Tab(icon: Icon(Icons.report), text: 'Report'),
+            Tab(icon: Icon(Icons.local_shipping), text: 'Track Trucks'),
+            Tab(icon: Icon(Icons.stars), text: 'Rewards'),
+          ],
         ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          WasteReportScreen(userId: widget.userId),
+          const TrackTrucksScreen(),
+          RewardsScreen(userId: widget.userId),
+        ],
       ),
     );
   }

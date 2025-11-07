@@ -36,9 +36,11 @@ class _AuthFormState extends State<AuthForm> {
         );
       }
     } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'Authentication failed')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? 'Authentication failed')),
+        );
+      }
     } finally {
       setState(() => _isLoading = false);
     }
