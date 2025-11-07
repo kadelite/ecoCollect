@@ -1,1 +1,31 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"ecocollect-app","appId":"1:336816040437:android:1af644477345fe966ad8bc","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"ecocollect-app","configurations":{"android":"1:336816040437:android:1af644477345fe966ad8bc","ios":"1:336816040437:ios:74ee684d32ad3a846ad8bc","macos":"1:336816040437:ios:74ee684d32ad3a846ad8bc","web":"1:336816040437:web:3b376878a80725096ad8bc","windows":"1:336816040437:web:1a24d6624978f58a6ad8bc"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "ecocollect-app",
+          "appId": "1:336816040437:android:1af644477345fe966ad8bc",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "ecocollect-app",
+          "configurations": {
+            "android": "1:336816040437:android:1af644477345fe966ad8bc",
+            "ios": "1:336816040437:ios:74ee684d32ad3a846ad8bc",
+            "macos": "1:336816040437:ios:74ee684d32ad3a846ad8bc",
+            "web": "1:336816040437:web:3b376878a80725096ad8bc",
+            "windows": "1:336816040437:web:1a24d6624978f58a6ad8bc"
+          }
+        }
+      }
+    }
+  }
+}

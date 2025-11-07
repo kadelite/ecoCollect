@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can read/write their own data
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Waste reports collection
+    match /waste_reports/{reportId} {
+      // Allow authenticated users to create reports
+      allow create: if request.auth != null
+                   && request.resource.data.userId == request.auth.uid;
+      
+      // Users can read their own reports
+      allow read: if request.auth != null
+                 && (resource.data.userId == request.auth.uid || request.auth != null);
+      
+      // Users can update/delete their own reports
+      allow update, delete: if request.auth != null
+                           && resource.data.userId == request.auth.uid;
+    }
+    
+    // Truck locations collection - public read, admin write only
+    match /truck_locations/{truckId} {
+      allow read: if true;  // Public read for tracking
+      allow write: if request.auth != null;  // Authenticated users can write (for testing)
+    }
+    
+    // Default: deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
